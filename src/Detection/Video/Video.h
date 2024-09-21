@@ -18,15 +18,11 @@ public:
                               const std::vector<float>& confidences,
                               const std::vector<cv::Rect>& boxes);
 
-    float getFps() const;
-    int getDetectFreq() const;
     cv::Size getWindowSize() const;
 
 private:
     std::string image_path;
     cv::VideoCapture cap;
-    float _fps;
-    int _detect_freq;
     cv::Size window_size;
     std::vector<cv::Scalar> class_color;
 

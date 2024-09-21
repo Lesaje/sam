@@ -52,6 +52,7 @@ std::vector<int> SSDModel::detect(const cv::Mat &image,
     net.setInput(blob);
 
     cv::Mat output = net.forward();
+
     cv::Mat detections(output.size[2], output.size[3], CV_32F, output.ptr<float>());
 
     for (int i = 0; i < detections.rows; ++i)
@@ -97,6 +98,8 @@ void SSDModel::loadModel()
                                          config_file);
     net.setPreferableBackend(cv::dnn::DNN_BACKEND_DEFAULT);
     net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
+
+
 
     std::vector<int> outLayers = net.getUnconnectedOutLayers();
     std::string outLayerType = net.getLayer(outLayers[0])->type;

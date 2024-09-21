@@ -14,10 +14,9 @@ Video::Video(const std::string& video_file, int class_num) : image_path(video_fi
         CV_Error(cv::Error::StsError, "Video file (" + image_path + ") cannot open.");
     }
 
-    _fps = static_cast<float>(cap.get(cv::CAP_PROP_FPS));
-    _detect_freq = static_cast<int>(_fps / 8);
     int width = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
     int height = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+    float _fps = (float)cap.get(cv::CAP_PROP_FPS);
     window_size = resizedSize(cv::Size(width, height));
 
     std::cout << "Video file: " << image_path << std::endl
@@ -59,16 +58,6 @@ void Video::drawDetectionResults(cv::Mat& image,
     }
 }
 
-float Video::getFps() const
-{
-    return _fps;
-}
-
-int Video::getDetectFreq() const
-{
-    return _detect_freq;
-}
-
 cv::Size Video::getWindowSize() const
 {
     return window_size;
@@ -76,11 +65,11 @@ cv::Size Video::getWindowSize() const
 
 cv::Size Video::resizedSize(cv::Size orig)
 {
-    int w = 600;
+    int w = 900;
     int h = orig.height * w / orig.width;
-    if (h > 600)
+    if (h > 1200)
     {
-        h = 600;
+        h = 900;
         w = orig.width * h / orig.height;
     }
     return cv::Size(w, h);

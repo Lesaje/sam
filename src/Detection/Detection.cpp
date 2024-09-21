@@ -19,7 +19,7 @@ void Detection::draw()
     cv::namedWindow(window_name, cv::WINDOW_NORMAL);
 
     cv::resizeWindow(window_name, this->getWindowSize());
-    auto start = std::chrono::high_resolution_clock::now();
+    auto frame = 0;
 
     while (true) {
 
@@ -28,20 +28,24 @@ void Detection::draw()
             break;
         }
 
-        cv::Mat result = this->detect(f);
-        if (result.empty()) {
-            break;
+
+        if (frame % 1 == 0) {
+            cv::Mat result = this->detect(f);
+            if (result.empty()) {
+                break;
+            }
+            cv::imshow(window_name, result);
+        } else {
+            cv::imshow(window_name, f);
         }
 
-        cv::imshow(window_name, result);
         if (cv::waitKey(1) >= 0) {
             break;
         }
+
+        frame += 1;
     }
 
-    auto end = std::chrono::high_resolution_clock::now();
-    auto frameTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "Frame processing time: " << frameTime << " ms" << std::endl;
 }
 
 cv::Mat Detection::detect(cv::Mat frame)
@@ -53,14 +57,11 @@ cv::Mat Detection::detect(cv::Mat frame)
         std::vector<cv::Rect> boxes;
 
         model->detectObjects(frame, classIds, classNames, confidences, boxes);
+
+
         video->drawDetectionResults(frame, classIds, classNames, confidences, boxes);
     }
     return frame;
-}
-
-float Detection::getFps() const
-{
-    return video->getFps();
 }
 
 cv::Size Detection::getWindowSize() const

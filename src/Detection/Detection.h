@@ -13,11 +13,9 @@ public:
     ~Detection();
 
     void draw();
-    float getFps() const;
     cv::Size getWindowSize() const;
 
 private:
-    bool useVideoSpeed = true;
     cv::Mat detect(cv::Mat frame);
     float conf_threshold = 0.5;
     float nms_threshold = 0.5;
