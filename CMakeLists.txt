@@ -15,8 +15,8 @@ file(GLOB project_SRCS src/*.cpp) #src/*.h
 add_executable(cpp ${project_SRCS}
         src/Detection/Video/Video.h
         src/Detection/Model/SSDModel.cpp
-        src/Detection/detection.cpp
-        src/Detection/detection.h
+        src/Detection/Detection.cpp
+        src/Detection/Detection.h
         src/Detection/Video/Video.cpp)
 target_link_libraries(cpp ${OpenCV_LIBRARIES})
 

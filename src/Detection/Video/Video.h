@@ -1,47 +1,37 @@
-#ifndef _GRAPHIC_H
-#define _GRAPHIC_H
+#ifndef VIDEO_H
+#define VIDEO_H
 
-#include "../Model/SSDModel.h"
-#include "../Model/MessageQueue.h"
+#include <opencv2/core/mat.hpp>
+#include <opencv2/videoio.hpp>
+#include <string>
+#include <vector>
 
-
-class Video
-{
+class Video {
 public:
-    Video(std::string img_file, int class_num);
+    Video(const std::string& video_file, int class_num);
     ~Video();
-    void drawResult(cv::Mat &image,
-                    const std::vector<int> &classIds,
-                    const std::vector<std::string> &classNames,
-                    const std::vector<float> &confidences,
-                    const std::vector<cv::Rect> &boxes);
-    cv::Mat getImage();
-    void setImageQueue(std::shared_ptr<MessageQueue<cv::Mat>> _image_queue);
-    void setDetectionQueue(std::shared_ptr<MessageQueue<cv::Mat>> _detect_queue);
-    float getFps();
-    int getDetectFreq();
-    cv::Size getWindowSize();
-    void thread_for_read();
+
+    cv::Mat getNextFrame();
+    void drawDetectionResults(cv::Mat& frame,
+                              const std::vector<int>& classIds,
+                              const std::vector<std::string>& classNames,
+                              const std::vector<float>& confidences,
+                              const std::vector<cv::Rect>& boxes);
+
+    float getFps() const;
+    int getDetectFreq() const;
+    cv::Size getWindowSize() const;
 
 private:
-    // Information about the input video
     std::string image_path;
+    cv::VideoCapture cap;
     float _fps;
     int _detect_freq;
-    int image_width;
-    int image_height;
     cv::Size window_size;
-    // thread for reading images
-    std::thread read_thread;
-    // pointer for the queue to send images being read
-    std::shared_ptr<MessageQueue<cv::Mat>> detect_queue = nullptr;
-    std::shared_ptr<MessageQueue<cv::Mat>> image_queue = nullptr;
-    // colors being assigned to classes randomly
     std::vector<cv::Scalar> class_color;
 
-    void readImage();
-    void setClassColor(int class_num);
     cv::Size resizedSize(cv::Size orig);
+    void setClassColor(int class_num);
 };
 
-#endif
+#endif // VIDEO_H
