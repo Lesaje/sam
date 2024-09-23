@@ -3,9 +3,8 @@
 
 #include <memory>
 #include <opencv2/core/mat.hpp>
-
-class SSDModel;
-class Video;
+#include "Model/SSDModel.h"
+#include "Video/Video.h"
 
 class Detection {
 public:
@@ -19,7 +18,7 @@ private:
     cv::Mat detect(cv::Mat frame);
     float conf_threshold = 0.5;
     float nms_threshold = 0.5;
-    std::string video_file = "/home/kuver/Downloads/test_videos/slow.mp4";
+    std::string video_file = "/home/kuver/Downloads/test_videos/walking.mp4";
     std::unique_ptr<SSDModel> model;
     std::unique_ptr<Video> video;
 };

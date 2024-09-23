@@ -6,7 +6,7 @@
 
 class SSDModel
 {
-    public:
+public:
     SSDModel(float conf_threshold, float nms_threshold);
     ~SSDModel();
 
@@ -18,7 +18,7 @@ class SSDModel
 
     int getClassNumber() const;
 
-  private:
+private:
     // Detection threshold
     float conf_threshold;
     float nms_threshold;
@@ -40,5 +40,6 @@ class SSDModel
                                     std::vector<float> &confidences,
                                     std::vector<cv::Rect> &boxes);
 };
+
 
 #endif

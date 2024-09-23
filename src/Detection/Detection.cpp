@@ -8,6 +8,7 @@
 Detection::Detection()
 {
     this->model = std::make_unique<SSDModel>(conf_threshold, nms_threshold);
+
     this->video =  std::make_unique<Video>(video_file, model->getClassNumber());
 }
 
