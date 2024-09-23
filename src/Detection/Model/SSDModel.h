@@ -7,7 +7,10 @@
 class SSDModel
 {
 public:
-    SSDModel(float conf_threshold, float nms_threshold);
+    SSDModel(const std::string& model_path,
+             const std::string& class_file_path,
+             float conf_threshold = 0.5,
+             float nms_threshold = 0.4);
     ~SSDModel();
 
     void detectObjects(const cv::Mat& image,
@@ -19,26 +22,30 @@ public:
     int getClassNumber() const;
 
 private:
-    // Detection threshold
+    // Detection thresholds
     float conf_threshold;
     float nms_threshold;
 
-    // SSD MobileNet Model files
-    const std::string class_file = "/home/kuver/Documents/SAM/cpp/resources/object_detection_classes_coco.txt";
-    const std::string model_file = "/home/kuver/Documents/SAM/cpp/resources/frozen_inference_graph.pb";
-    const std::string config_file = "/home/kuver/Documents/SAM/cpp/resources/ssd_mobilenet_v2_coco_2018_03_29.pbtxt";;
+    // Model and class file paths
+    std::string model_path;
+    std::string class_file_path;
 
-    // Store the list of classe name
+    // Store the list of class names
     std::vector<std::string> classes;
+
     // DNN model
     cv::dnn::Net net;
-    // Information about detected objects
 
     void readClassFile();
-    void loadModel();
-    std::vector<int> detect(const cv::Mat &image, std::vector<int> &classIds,
-                                    std::vector<float> &confidences,
-                                    std::vector<cv::Rect> &boxes);
+    void loadModelFromONNX();
+    void loadModelFromTf();
+    std::vector<int> detect(const cv::Mat &image,
+                            std::vector<int> &classIds,
+                            std::vector<float> &confidences,
+                            std::vector<cv::Rect> &boxes);
+
+    // New method for setting up network parameters
+    void setupNetwork();
 };
 
 

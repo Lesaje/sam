@@ -3,11 +3,17 @@
 #include <fstream>
 #include <iostream>
 
-SSDModel::SSDModel(float conf_threshold, float nms_threshold)
-    : conf_threshold(conf_threshold), nms_threshold(nms_threshold)
+SSDModel::SSDModel(const std::string& model_path,
+                   const std::string& class_file_path,
+                   float conf_threshold,
+                   float nms_threshold)
+    : conf_threshold(conf_threshold),
+      nms_threshold(nms_threshold),
+      model_path(model_path),
+      class_file_path(class_file_path)
 {
+    loadModelFromONNX();
     readClassFile();
-    loadModel();
 }
 
 SSDModel::~SSDModel() = default;
@@ -81,9 +87,9 @@ std::vector<int> SSDModel::detect(const cv::Mat &image,
 
 void SSDModel::readClassFile()
 {
-    std::ifstream ifs(class_file);
+    std::ifstream ifs(class_file_path);
     if (!ifs.is_open())
-        CV_Error(cv::Error::StsError, "Class File not found.");
+        CV_Error(cv::Error::StsError, "Class File not found: " + class_file_path);
 
     std::string line;
     while (std::getline(ifs, line))
@@ -92,17 +98,36 @@ void SSDModel::readClassFile()
     }
 }
 
-void SSDModel::loadModel()
+void SSDModel::loadModelFromONNX()
 {
-    net = cv::dnn::readNetFromTensorflow(model_file,
-                                         config_file);
+    std::cout << "Before load" << std::endl;
+    net = cv::dnn::readNetFromONNX(model_path);
+    std::cout << "After load" << std::endl;
     net.setPreferableBackend(cv::dnn::DNN_BACKEND_DEFAULT);
     net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
+}
+
+void SSDModel::loadModelFromTf()
+{
+    try {
+        net = cv::dnn::readNetFromTensorflow("../resources/frozen_inference_graph.pb",
+                                         "../resources/ssd_mobilenet_v2_coco_2018_03_29.pbtxt");
+        setupNetwork();
+    } catch (const cv::Exception& e) {
+        std::cerr << "Error loading ONNX model: " << e.what() << std::endl;
+        throw;
+    }
 
 
+}
+
+void SSDModel::setupNetwork()
+{
+    net.setPreferableBackend(cv::dnn::DNN_BACKEND_DEFAULT);
+    net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
 
     std::vector<int> outLayers = net.getUnconnectedOutLayers();
     std::string outLayerType = net.getLayer(outLayers[0])->type;
     if (outLayerType != "DetectionOutput")
-       CV_Error(cv::Error::StsNotImplemented, "Unexpected output layer type: " + outLayerType);
+        CV_Error(cv::Error::StsNotImplemented, "Unexpected output layer type: " + outLayerType);
 }

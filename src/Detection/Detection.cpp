@@ -7,7 +7,15 @@
 
 Detection::Detection()
 {
-    this->model = std::make_unique<SSDModel>(conf_threshold, nms_threshold);
+
+    std::cout << "OpenCV version : " << __cplusplus << std::endl;
+    std::cout << "Major version : " << CV_MAJOR_VERSION << std::endl;
+    std::cout << "Minor version : " << CV_MINOR_VERSION << std::endl;
+    std::cout << "Subminor version : " << CV_SUBMINOR_VERSION << std::endl;
+
+    this->model = std::make_unique<SSDModel>(
+        "/home/kuver/Documents/SAM/cpp/resources/ssdlite320_mobilenet_v3_large.onnx",
+    "/home/kuver/Documents/SAM/cpp/resources/object_detection_classes_coco.txt");
 
     this->video =  std::make_unique<Video>(video_file, model->getClassNumber());
 }
