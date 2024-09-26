@@ -3,16 +3,11 @@
 #include <fstream>
 #include <iostream>
 
-SSDModel::SSDModel(const std::string& model_path,
-                   const std::string& class_file_path,
-                   float conf_threshold,
-                   float nms_threshold)
-    : conf_threshold(conf_threshold),
-      nms_threshold(nms_threshold),
-      model_path(model_path),
-      class_file_path(class_file_path)
+SSDModel::SSDModel(float conf_threshold, float nms_threshold)
 {
-    loadModelFromTf();
+    this->conf_threshold = conf_threshold;
+    this->nms_threshold = nms_threshold;
+    loadModel();
     readClassFile();
 }
 
@@ -104,19 +99,10 @@ void SSDModel::readClassFile()
     }
 }
 
-void SSDModel::loadModelFromONNX()
+void SSDModel::loadModel()
 {
-    std::cout << "Before load" << std::endl;
-    net = cv::dnn::readNetFromONNX(model_path);
-    std::cout << "After load" << std::endl;
-    net.setPreferableBackend(cv::dnn::DNN_BACKEND_DEFAULT);
-    net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
-}
-
-void SSDModel::loadModelFromTf()
-{
-    net = cv::dnn::readNetFromTensorflow("../resources/frozen_inference_graph.pb",
-                                         "../resources/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt");
+    net = cv::dnn::readNetFromTensorflow(model_path,
+                                         config);
     setupNetwork();
 }
 

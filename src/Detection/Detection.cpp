@@ -7,9 +7,7 @@
 
 Detection::Detection()
 {
-    this->model = std::make_unique<SSDModel>(
-        "/home/kuver/Documents/SAM/cpp/resources/ssdlite320_mobilenet_v3_large.onnx",
-    "/home/kuver/Documents/SAM/cpp/resources/object_detection_classes_coco.txt");
+    this->model = std::make_unique<SSDModel>();
 
     if (use_webcam) {
         this->video = std::make_unique<Video>("", Video::SourceType::WEBCAM, model->getClassNumber());

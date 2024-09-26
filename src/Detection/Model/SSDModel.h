@@ -7,10 +7,7 @@
 class SSDModel
 {
 public:
-    SSDModel(const std::string& model_path,
-             const std::string& class_file_path,
-             float conf_threshold = 0.6,
-             float nms_threshold = 0.9);
+    SSDModel(float conf_threshold = 0.6, float nms_threshold = 0.9);
     ~SSDModel();
 
     void detectObjects(const cv::Mat& image,
@@ -27,8 +24,9 @@ private:
     float nms_threshold;
 
     // Model and class file paths
-    std::string model_path;
-    std::string class_file_path;
+    std::string model_path = "../resources/frozen_inference_graph.pb";
+    std::string config = "../resources/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt";
+    std::string class_file_path = "../resources/object_detection_classes_coco.txt";
 
     // Store the list of class names
     std::vector<std::string> classes;
@@ -37,8 +35,7 @@ private:
     cv::dnn::Net net;
 
     void readClassFile();
-    void loadModelFromONNX();
-    void loadModelFromTf();
+    void loadModel();
     std::vector<int> detect(const cv::Mat &image,
                             std::vector<int> &classIds,
                             std::vector<float> &confidences,
