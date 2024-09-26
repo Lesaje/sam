@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(cpp)
 
-find_package(OpenCV 4.1 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 

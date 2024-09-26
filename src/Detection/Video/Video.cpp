@@ -5,13 +5,32 @@
 #include <iomanip>
 #include <iostream>
 
-Video::Video(const std::string& video_file, int class_num) : image_path(video_file), cap(video_file)
+Video::Video(const std::string& source, SourceType type, int class_num)
+    : source_type(type), source_path(source)
 {
     setClassColor(class_num);
+    initializeCapture();
+}
 
-    if (!cap.isOpened())
+Video::~Video() = default;
+
+void Video::initializeCapture()
+{
+    if (source_type == SourceType::FILE)
     {
-        CV_Error(cv::Error::StsError, "Video file (" + image_path + ") cannot open.");
+        cap.open(source_path);
+        if (!cap.isOpened())
+        {
+            CV_Error(cv::Error::StsError, "Video file (" + source_path + ") cannot open.");
+        }
+    }
+    else if (source_type == SourceType::WEBCAM)
+    {
+        cap.open(0); // Open default camera
+        if (!cap.isOpened())
+        {
+            CV_Error(cv::Error::StsError, "Cannot open webcam.");
+        }
     }
 
     int width = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
@@ -19,13 +38,11 @@ Video::Video(const std::string& video_file, int class_num) : image_path(video_fi
     float _fps = (float)cap.get(cv::CAP_PROP_FPS);
     window_size = resizedSize(cv::Size(width, height));
 
-    std::cout << "Video file: " << image_path << std::endl
+    std::cout << "Video source: " << (source_type == SourceType::FILE ? "File" : "Webcam") << std::endl
               << "- original width = " << width << std::endl
               << "- original height = " << height << std::endl
               << "- fps = " << _fps << std::endl;
 }
-
-Video::~Video() = default;
 
 cv::Mat Video::getNextFrame()
 {

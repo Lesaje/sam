@@ -8,7 +8,11 @@
 
 class Video {
 public:
-    Video(const std::string& video_file, int class_num);
+    enum class SourceType {
+        FILE,
+        WEBCAM
+    };
+    Video(const std::string& source, SourceType type, int class_num);
     ~Video();
 
     cv::Mat getNextFrame();
@@ -21,13 +25,15 @@ public:
     cv::Size getWindowSize() const;
 
 private:
-    std::string image_path;
+    SourceType source_type;
+    std::string source_path;
     cv::VideoCapture cap;
     cv::Size window_size;
     std::vector<cv::Scalar> class_color;
 
     cv::Size resizedSize(cv::Size orig);
     void setClassColor(int class_num);
+    void initializeCapture();
 };
 
 #endif // VIDEO_H

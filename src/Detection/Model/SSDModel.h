@@ -9,8 +9,8 @@ class SSDModel
 public:
     SSDModel(const std::string& model_path,
              const std::string& class_file_path,
-             float conf_threshold = 0.5,
-             float nms_threshold = 0.4);
+             float conf_threshold = 0.6,
+             float nms_threshold = 0.9);
     ~SSDModel();
 
     void detectObjects(const cv::Mat& image,

@@ -12,7 +12,7 @@ SSDModel::SSDModel(const std::string& model_path,
       model_path(model_path),
       class_file_path(class_file_path)
 {
-    loadModelFromONNX();
+    loadModelFromTf();
     readClassFile();
 }
 
@@ -54,10 +54,16 @@ std::vector<int> SSDModel::detect(const cv::Mat &image,
                                   std::vector<float> &confidences,
                                   std::vector<cv::Rect> &boxes)
 {
-    cv::Mat blob = cv::dnn::blobFromImage(image, 1.0, cv::Size(300, 300), cv::Scalar(), true, false);
+    cv::Mat blob = cv::dnn::blobFromImage(image, 1.0 / 127.5, cv::Size(320, 320), cv::Scalar(127.5, 127.5, 127.5), true, false);
     net.setInput(blob);
 
+    //auto start = std::chrono::high_resolution_clock::now();
+
     cv::Mat output = net.forward();
+
+    //auto end = std::chrono::high_resolution_clock::now();
+    //std::chrono::duration<double, std::milli> duration = end - start;
+    //std::cout << "Detection time: " << duration.count() << " ms" << std::endl;
 
     cv::Mat detections(output.size[2], output.size[3], CV_32F, output.ptr<float>());
 
@@ -109,16 +115,9 @@ void SSDModel::loadModelFromONNX()
 
 void SSDModel::loadModelFromTf()
 {
-    try {
-        net = cv::dnn::readNetFromTensorflow("../resources/frozen_inference_graph.pb",
-                                         "../resources/ssd_mobilenet_v2_coco_2018_03_29.pbtxt");
-        setupNetwork();
-    } catch (const cv::Exception& e) {
-        std::cerr << "Error loading ONNX model: " << e.what() << std::endl;
-        throw;
-    }
-
-
+    net = cv::dnn::readNetFromTensorflow("../resources/frozen_inference_graph.pb",
+                                         "../resources/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt");
+    setupNetwork();
 }
 
 void SSDModel::setupNetwork()

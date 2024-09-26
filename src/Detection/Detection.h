@@ -16,9 +16,8 @@ public:
 
 private:
     cv::Mat detect(cv::Mat frame);
-    float conf_threshold = 0.5;
-    float nms_threshold = 0.5;
     std::string video_file = "/home/kuver/Downloads/test_videos/slow.mp4";
+    bool use_webcam = false;
     std::unique_ptr<SSDModel> model;
     std::unique_ptr<Video> video;
 };
