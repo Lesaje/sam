@@ -17,7 +17,7 @@ public:
 private:
     cv::Mat detect(cv::Mat frame);
     std::string video_file = "/home/kuver/Downloads/test_videos/slow.mp4";
-    bool use_webcam = false;
+    bool use_webcam = true;
     std::unique_ptr<SSDModel> model;
     std::unique_ptr<Video> video;
 };

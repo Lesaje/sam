@@ -12,10 +12,12 @@ public:
         FILE,
         WEBCAM
     };
+
     Video(const std::string& source, SourceType type, int class_num);
     ~Video();
 
     cv::Mat getNextFrame();
+
     void drawDetectionResults(cv::Mat& frame,
                               const std::vector<int>& classIds,
                               const std::vector<std::string>& classNames,
@@ -29,10 +31,8 @@ private:
     std::string source_path;
     cv::VideoCapture cap;
     cv::Size window_size;
-    std::vector<cv::Scalar> class_color;
 
     cv::Size resizedSize(cv::Size orig);
-    void setClassColor(int class_num);
     void initializeCapture();
 };
 

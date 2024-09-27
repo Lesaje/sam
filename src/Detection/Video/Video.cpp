@@ -8,7 +8,6 @@
 Video::Video(const std::string& source, SourceType type, int class_num)
     : source_type(type), source_path(source)
 {
-    setClassColor(class_num);
     initializeCapture();
 }
 
@@ -59,7 +58,7 @@ void Video::drawDetectionResults(cv::Mat& image,
 {
     for (size_t i = 0; i < classIds.size(); i++)
     {
-        cv::rectangle(image, boxes[i], class_color[classIds[i]], 2);
+        cv::rectangle(image, boxes[i], cv::Scalar(200, 100, 0), 2);
 
         std::ostringstream label_ss;
         label_ss << classNames[i] << ": " << std::fixed << std::setprecision(2) << confidences[i] * 100.0 << "%";
@@ -69,7 +68,7 @@ void Video::drawDetectionResults(cv::Mat& image,
         cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseline);
         cv::rectangle(image, cv::Point(boxes[i].x, boxes[i].y - labelSize.height - 10),
                       cv::Point(boxes[i].x + labelSize.width, boxes[i].y),
-                      class_color[classIds[i]], cv::FILLED);
+                      cv::Scalar(0, 100, 200), cv::FILLED);
         cv::putText(image, label, cv::Point(boxes[i].x, boxes[i].y - 5),
                     cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0), 1);
     }
@@ -90,18 +89,4 @@ cv::Size Video::resizedSize(cv::Size orig)
         w = orig.width * h / orig.height;
     }
     return cv::Size(w, h);
-}
-
-void Video::setClassColor(int class_num)
-{
-    std::mt19937 random_engine(2019);
-    std::uniform_int_distribution<int> distribution(0, 255);
-
-    for (int i = 0; i < class_num; ++i)
-    {
-        cv::Scalar color = cv::Scalar(distribution(random_engine),
-                                      distribution(random_engine),
-                                      distribution(random_engine));
-        class_color.push_back(color);
-    }
 }
