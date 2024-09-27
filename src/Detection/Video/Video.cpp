@@ -1,29 +1,20 @@
 #include "Video.h"
 #include <opencv2/imgproc.hpp>
-#include <opencv2/highgui.hpp>
 #include <random>
 #include <iomanip>
 #include <iostream>
 
-Video::Video(const std::string& source, SourceType type, int class_num)
-    : source_type(type), source_path(source)
+Video::Video(const DTO::VideoSource& source) : sourceType(source.type), sourcePath(source.path)
 {
-    initializeCapture();
-}
-
-Video::~Video() = default;
-
-void Video::initializeCapture()
-{
-    if (source_type == SourceType::FILE)
+    if (sourceType == DTO::SourceType::FILE)
     {
-        cap.open(source_path);
+        cap.open(sourcePath);
         if (!cap.isOpened())
         {
-            CV_Error(cv::Error::StsError, "Video file (" + source_path + ") cannot open.");
+            CV_Error(cv::Error::StsError, "Video file (" + sourcePath + ") cannot open.");
         }
     }
-    else if (source_type == SourceType::WEBCAM)
+    else if (sourceType == DTO::SourceType::WEBCAM)
     {
         cap.open(0); // Open default camera
         if (!cap.isOpened())
@@ -31,17 +22,9 @@ void Video::initializeCapture()
             CV_Error(cv::Error::StsError, "Cannot open webcam.");
         }
     }
-
-    int width = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
-    int height = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
-    float _fps = (float)cap.get(cv::CAP_PROP_FPS);
-    window_size = resizedSize(cv::Size(width, height));
-
-    std::cout << "Video source: " << (source_type == SourceType::FILE ? "File" : "Webcam") << std::endl
-              << "- original width = " << width << std::endl
-              << "- original height = " << height << std::endl
-              << "- fps = " << _fps << std::endl;
 }
+
+Video::~Video() = default;
 
 cv::Mat Video::getNextFrame()
 {
@@ -50,43 +33,22 @@ cv::Mat Video::getNextFrame()
     return frame;
 }
 
-void Video::drawDetectionResults(cv::Mat& image,
-                                 const std::vector<int>& classIds,
-                                 const std::vector<std::string>& classNames,
-                                 const std::vector<float>& confidences,
-                                 const std::vector<cv::Rect>& boxes)
+void Video::drawDetectionResults(const DTO::FrameData& frameData)
 {
-    for (size_t i = 0; i < classIds.size(); i++)
+    for (const auto& detection : frameData.detections)
     {
-        cv::rectangle(image, boxes[i], cv::Scalar(200, 100, 0), 2);
+        cv::rectangle(frameData.frame, detection.box, cv::Scalar(200, 100, 0), 2);
 
-        std::ostringstream label_ss;
-        label_ss << classNames[i] << ": " << std::fixed << std::setprecision(2) << confidences[i] * 100.0 << "%";
-        std::string label = label_ss.str();
+        std::ostringstream labelSs;
+        labelSs << detection.className << ": " << std::fixed << std::setprecision(2) << detection.confidence * 100.0 << "%";
+        std::string label = labelSs.str();
 
         int baseline;
-        cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseline);
-        cv::rectangle(image, cv::Point(boxes[i].x, boxes[i].y - labelSize.height - 10),
-                      cv::Point(boxes[i].x + labelSize.width, boxes[i].y),
+        cv::Size const labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseline);
+        cv::rectangle(frameData.frame, cv::Point(detection.box.x, detection.box.y - labelSize.height - 10),
+                      cv::Point(detection.box.x + labelSize.width, detection.box.y),
                       cv::Scalar(0, 100, 200), cv::FILLED);
-        cv::putText(image, label, cv::Point(boxes[i].x, boxes[i].y - 5),
+        cv::putText(frameData.frame, label, cv::Point(detection.box.x, detection.box.y - 5),
                     cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0), 1);
     }
-}
-
-cv::Size Video::getWindowSize() const
-{
-    return window_size;
-}
-
-cv::Size Video::resizedSize(cv::Size orig)
-{
-    int w = 900;
-    int h = orig.height * w / orig.width;
-    if (h > 1200)
-    {
-        h = 900;
-        w = orig.width * h / orig.height;
-    }
-    return cv::Size(w, h);
 }

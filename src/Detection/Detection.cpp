@@ -1,12 +1,14 @@
 #include "Detection.h"
-
+#include <opencv2/highgui.hpp>
+#include <pthread.h>
 
 Detection::Detection() : running(false)
 {
-    for (size_t i = 0; i < video_sources.size(); ++i) {
-        detections.push_back(std::make_unique<Detector>(video_sources[i], source_types[i]));
-        window_names.push_back("Stream " + std::to_string(i + 1));
-        active_streams.push_back(true);
+    for (size_t i = 0; i < videoSources.size(); ++i) {
+        DTO::VideoSource source{videoSources[i], sourceTypes[i]};
+        detectors.push_back(std::make_unique<Detector>(source));
+        windowNames.push_back("Stream " + std::to_string(i + 1));
+        activeStreams.push_back(true);
     }
 }
 
@@ -18,7 +20,7 @@ Detection::~Detection()
 void Detection::start()
 {
     running = true;
-    for (size_t i = 0; i < detections.size(); ++i) {
+    for (size_t i = 0; i < detectors.size(); ++i) {
         threads.emplace_back(&Detection::processingLoop, this, i);
     }
 
@@ -37,35 +39,35 @@ void Detection::stop()
     }
     threads.clear();
 
-    for (const auto& window_name : window_names) {
-        cv::destroyWindow(window_name);
+    for (const auto& windowName : windowNames) {
+        cv::destroyWindow(windowName);
     }
 }
 
 void Detection::displayLoop()
 {
-    for (const auto& window_name : window_names) {
-        cv::namedWindow(window_name, cv::WINDOW_NORMAL);
+    for (const auto& windowName : windowNames) {
+        cv::namedWindow(windowName, cv::WINDOW_NORMAL);
     }
 
     while (running) {
-        bool all_streams_ended = true;
+        bool allStreamsEnded = true;
 
-        for (size_t i = 0; i < detections.size(); ++i) {
-            if (active_streams[i]) {
-                all_streams_ended = false;
-                cv::Mat frame;
+        for (size_t i = 0; i < detectors.size(); ++i) {
+            if (activeStreams[i]) {
+                allStreamsEnded = false;
+                DTO::FrameData frameData;
                 {
-                    std::lock_guard<std::mutex> lock(frame_mutex);
-                    frame = detections[i]->getProcessedFrame();
+                    std::lock_guard<std::mutex> lock(frameMutex);
+                    frameData = detectors[i]->getProcessedFrame();
                 }
-                if (!frame.empty()) {
-                    cv::imshow(window_names[i], frame);
+                if (!frameData.frame.empty()) {
+                    cv::imshow(windowNames[i], frameData.frame);
                 }
             }
         }
 
-        if (all_streams_ended) {
+        if (allStreamsEnded) {
             running = false;
         }
 
@@ -76,60 +78,14 @@ void Detection::displayLoop()
     }
 }
 
-void Detection::processingLoop(int index)
+void Detection::processingLoop(const int index) const
 {
-    // Set thread affinity to a specific core (0, 1, or 2)
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
     CPU_SET(index % 3, &cpuset);
     pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
 
     while (running) {
-        detections[index]->process();
+        detectors[index]->process();
     }
-}
-
-std::vector<cv::Mat> Detection::getProcessedFrames() const
-{
-    std::vector<cv::Mat> frames;
-    for (const auto& detection : detections) {
-        frames.push_back(detection->getProcessedFrame());
-    }
-    return frames;
-}
-
-std::vector<std::vector<int>> Detection::getAllClassIds() const
-{
-    std::vector<std::vector<int>> all_class_ids;
-    for (const auto& detection : detections) {
-        all_class_ids.push_back(detection->getClassIds());
-    }
-    return all_class_ids;
-}
-
-std::vector<std::vector<std::string>> Detection::getAllClassNames() const
-{
-    std::vector<std::vector<std::string>> all_class_names;
-    for (const auto& detection : detections) {
-        all_class_names.push_back(detection->getClassNames());
-    }
-    return all_class_names;
-}
-
-std::vector<std::vector<float>> Detection::getAllConfidences() const
-{
-    std::vector<std::vector<float>> all_confidences;
-    for (const auto& detection : detections) {
-        all_confidences.push_back(detection->getConfidences());
-    }
-    return all_confidences;
-}
-
-std::vector<std::vector<cv::Rect>> Detection::getAllBoxes() const
-{
-    std::vector<std::vector<cv::Rect>> all_boxes;
-    for (const auto& detection : detections) {
-        all_boxes.push_back(detection->getBoxes());
-    }
-    return all_boxes;
 }

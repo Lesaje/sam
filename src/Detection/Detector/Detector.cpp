@@ -1,13 +1,15 @@
 #include "Detector.h"
 
-#include <opencv2/highgui.hpp>
-#include "../Model/SSDModel.h"
-#include "../Video/Video.h"
-
-Detector::Detector(const std::string& video_source, Video::SourceType source_type)
+Detector::Detector(const DTO::VideoSource& videoSource)
 {
-    this->model = std::make_unique<SSDModel>();
-    this->video = std::make_unique<Video>(video_source, source_type, model->getClassNumber());
+    this->model = std::make_unique<SSDModel>(DTO::ModelConfig{
+        "../resources/frozen_inference_graph.pb",
+        "../resources/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt",
+        "../resources/object_detection_classes_coco.txt",
+        0.6f,
+        0.9f
+    });
+    this->video = std::make_unique<Video>(videoSource);
 }
 
 Detector::~Detector() = default;
@@ -16,45 +18,22 @@ void Detector::process()
 {
     cv::Mat frame = video->getNextFrame();
     if (!frame.empty()) {
-        processed_frame = detect(frame);
+        processedFrame = detect(frame);
     } else {
-        processed_frame = cv::Mat();
+        processedFrame = DTO::FrameData();  //TODO: maybe should change default frame to something different
     }
 }
 
-cv::Mat Detector::detect(cv::Mat frame)
+DTO::FrameData Detector::detect(const cv::Mat& frame)
 {
-    model->detectObjects(frame, class_ids, class_names, confidences, boxes);
-    video->drawDetectionResults(frame, class_ids, class_names, confidences, boxes);
-    return frame;
+    DTO::FrameData frameData;
+    frameData.frame = frame;
+    frameData.detections = model->detectObjects(frame);
+    video->drawDetectionResults(frameData);
+    return frameData;
 }
 
-cv::Mat Detector::getProcessedFrame() const
+DTO::FrameData Detector::getProcessedFrame() const
 {
-    return processed_frame;
-}
-
-std::vector<int> Detector::getClassIds() const
-{
-    return class_ids;
-}
-
-std::vector<std::string> Detector::getClassNames() const
-{
-    return class_names;
-}
-
-std::vector<float> Detector::getConfidences() const
-{
-    return confidences;
-}
-
-std::vector<cv::Rect> Detector::getBoxes() const
-{
-    return boxes;
-}
-
-cv::Size Detector::getWindowSize() const
-{
-    return video->getWindowSize();
+    return processedFrame;
 }

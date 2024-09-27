@@ -21,6 +21,7 @@ add_executable(cpp ${project_SRCS}
         src/Detection/Detector/Detector.cpp
         src/Detection/Detection.h
         src/Detection/Detection.cpp
+        src/Detection/DTO/DetectionDTO.h
 )
 target_link_libraries(cpp ${OpenCV_LIBRARIES})
 

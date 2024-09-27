@@ -2,71 +2,34 @@
 #include <opencv2/dnn.hpp>
 #include <fstream>
 #include <iostream>
+#include <utility>
 
-SSDModel::SSDModel(float conf_threshold, float nms_threshold)
+SSDModel::SSDModel(DTO::ModelConfig config) : config(std::move(config))
 {
-    this->conf_threshold = conf_threshold;
-    this->nms_threshold = nms_threshold;
     loadModel();
     readClassFile();
 }
 
 SSDModel::~SSDModel() = default;
 
-void SSDModel::detectObjects(const cv::Mat& image,
-                             std::vector<int>& classIds,
-                             std::vector<std::string>& classNames,
-                             std::vector<float>& confidences,
-                             std::vector<cv::Rect>& boxes)
-{
-    std::vector<int> indices = detect(image, classIds, confidences, boxes);
-
-    std::vector<int> filteredClassIds;
-    std::vector<std::string> filteredClassNames;
-    std::vector<float> filteredConfidences;
-    std::vector<cv::Rect> filteredBoxes;
-
-    for (int index : indices) {
-        filteredClassIds.push_back(classIds[index]);
-        filteredClassNames.push_back(classes[classIds[index]]);
-        filteredConfidences.push_back(confidences[index]);
-        filteredBoxes.push_back(boxes[index]);
-    }
-
-    classIds = std::move(filteredClassIds);
-    classNames = std::move(filteredClassNames);
-    confidences = std::move(filteredConfidences);
-    boxes = std::move(filteredBoxes);
-}
-
-int SSDModel::getClassNumber() const
-{
-    return classes.size();
-}
-
-std::vector<int> SSDModel::detect(const cv::Mat &image,
-                                  std::vector<int> &classIds,
-                                  std::vector<float> &confidences,
-                                  std::vector<cv::Rect> &boxes)
+std::vector<DTO::DetectionResult> SSDModel::detectObjects(const cv::Mat& image)
 {
     cv::Mat blob = cv::dnn::blobFromImage(image, 1.0 / 127.5, cv::Size(320, 320), cv::Scalar(127.5, 127.5, 127.5), true, false);
     net.setInput(blob);
 
-    //auto start = std::chrono::high_resolution_clock::now();
-
     cv::Mat output = net.forward();
 
-    //auto end = std::chrono::high_resolution_clock::now();
-    //std::chrono::duration<double, std::milli> duration = end - start;
-    //std::cout << "Detection time: " << duration.count() << " ms" << std::endl;
-
     cv::Mat detections(output.size[2], output.size[3], CV_32F, output.ptr<float>());
+
+    std::vector<int> classIds;
+    std::vector<float> confidences;
+    std::vector<cv::Rect> boxes;
 
     for (int i = 0; i < detections.rows; ++i)
     {
         float confidence = detections.at<float>(i, 2);
 
-        if (confidence > conf_threshold)
+        if (confidence > config.confidenceThreshold)
         {
             int classId = static_cast<int>(detections.at<float>(i, 1)) - 1;
             int left = static_cast<int>(detections.at<float>(i, 3) * image.cols);
@@ -76,21 +39,36 @@ std::vector<int> SSDModel::detect(const cv::Mat &image,
 
             classIds.push_back(classId);
             confidences.push_back(confidence);
-            boxes.push_back(cv::Rect(left, top, right - left + 1, bottom - top + 1));
+            boxes.emplace_back(left, top, right - left + 1, bottom - top + 1);
         }
     }
 
     std::vector<int> indices;
-    cv::dnn::NMSBoxes(boxes, confidences, conf_threshold, nms_threshold, indices);
+    cv::dnn::NMSBoxes(boxes, confidences, config.confidenceThreshold, config.nmsThreshold, indices);
 
-    return indices;
+    std::vector<DTO::DetectionResult> results;
+    for (int index : indices) {
+        DTO::DetectionResult result;
+        result.classId = classIds[index];
+        result.className = classes[classIds[index]];
+        result.confidence = confidences[index];
+        result.box = boxes[index];
+        results.push_back(result);
+    }
+
+    return results;
+}
+
+int SSDModel::getClassNumber() const
+{
+    return classes.size();
 }
 
 void SSDModel::readClassFile()
 {
-    std::ifstream ifs(class_file_path);
+    std::ifstream ifs(config.classFilePath);
     if (!ifs.is_open())
-        CV_Error(cv::Error::StsError, "Class File not found: " + class_file_path);
+        CV_Error(cv::Error::StsError, "Class File not found: " + config.classFilePath);
 
     std::string line;
     while (std::getline(ifs, line))
@@ -101,8 +79,7 @@ void SSDModel::readClassFile()
 
 void SSDModel::loadModel()
 {
-    net = cv::dnn::readNetFromTensorflow(model_path,
-                                         config);
+    net = cv::dnn::readNetFromTensorflow(config.modelPath, config.configPath);
     setupNetwork();
 }
 
