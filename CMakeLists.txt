@@ -17,8 +17,11 @@ add_executable(cpp ${project_SRCS}
         src/Detection/Video/Video.cpp
         src/Detection/Model/SSDModel.h
         src/Detection/Model/SSDModel.cpp
+        src/Detection/Detector/Detector.h
+        src/Detection/Detector/Detector.cpp
         src/Detection/Detection.h
-        src/Detection/Detection.cpp)
+        src/Detection/Detection.cpp
+)
 target_link_libraries(cpp ${OpenCV_LIBRARIES})
 
 

@@ -2,8 +2,7 @@
 
 int main()
 {
-    auto detection = new Detection();
-
-    detection->draw();
+    auto const multiDetection = new Detection();
+    multiDetection->start();
     return 0;
 }
