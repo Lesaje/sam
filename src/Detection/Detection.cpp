@@ -46,10 +46,6 @@ void Detection::stop()
 
 void Detection::displayLoop()
 {
-    for (const auto& windowName : windowNames) {
-        cv::namedWindow(windowName, cv::WINDOW_NORMAL);
-    }
-
     while (running) {
         bool allStreamsEnded = true;
 
@@ -58,7 +54,6 @@ void Detection::displayLoop()
                 allStreamsEnded = false;
                 DTO::FrameData frameData;
                 {
-                    std::lock_guard<std::mutex> lock(frameMutex);
                     frameData = detectors[i]->getProcessedFrame();
                 }
                 if (!frameData.frame.empty()) {
@@ -71,21 +66,24 @@ void Detection::displayLoop()
             running = false;
         }
 
-        int key = cv::waitKey(1);
-        if (key >= 0) {
-            running = false;
-        }
+        cv::waitKey(1);
     }
 }
 
-void Detection::processingLoop(const int index) const
+void Detection::processingLoop(const int i) const
 {
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    CPU_SET(index % 3, &cpuset);
+    CPU_SET(i % 3, &cpuset);
     pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
 
+    /*
+    DTO::VideoSource source{videoSources[i], sourceTypes[i]};
+    auto detector = std::make_unique<Detector>(source);
+    std::string window_name = "Stream " + std::to_string(i + 1);
+    */
+
     while (running) {
-        detectors[index]->process();
+        DTO::FrameData frame = detectors[i]->process();
     }
 }

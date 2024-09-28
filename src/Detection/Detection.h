@@ -17,7 +17,7 @@ private:
 
     std::vector<std::string> videoSources = {
         "/home/kuver/Downloads/test_videos/running.mp4",
-        "/home/kuver/Downloads/test_videos/slow.mp4",
+        "/home/kuver/Downloads/test_videos/walking.mp4",
         "/home/kuver/Downloads/test_videos/slow.mp4"
     };
     std::vector<DTO::SourceType> sourceTypes = {
@@ -31,7 +31,6 @@ private:
     std::vector<std::string> windowNames;
     std::vector<bool> activeStreams;
     std::atomic<bool> running;
-    std::mutex frameMutex;
 
     void processingLoop(int index) const;
     void displayLoop();

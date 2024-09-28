@@ -11,11 +11,10 @@ public:
     explicit Detector(const DTO::VideoSource& videoSource);
     ~Detector();
 
-    void process();
-    [[nodiscard]] DTO::FrameData getProcessedFrame() const;
+    DTO::FrameData process();
+    DTO::FrameData getProcessedFrame() const;
 
 private:
-    DTO::FrameData detect(const cv::Mat& frame);
     std::unique_ptr<SSDModel> model;
     std::unique_ptr<Video> video;
     DTO::FrameData processedFrame;

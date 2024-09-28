@@ -3,6 +3,7 @@
 #include <random>
 #include <iomanip>
 #include <iostream>
+#include <opencv2/highgui.hpp>
 
 Video::Video(const DTO::VideoSource& source) : sourceType(source.type), sourcePath(source.path)
 {
@@ -37,6 +38,7 @@ void Video::drawDetectionResults(const DTO::FrameData& frameData)
 {
     for (const auto& detection : frameData.detections)
     {
+
         cv::rectangle(frameData.frame, detection.box, cv::Scalar(200, 100, 0), 2);
 
         std::ostringstream labelSs;
@@ -50,5 +52,6 @@ void Video::drawDetectionResults(const DTO::FrameData& frameData)
                       cv::Scalar(0, 100, 200), cv::FILLED);
         cv::putText(frameData.frame, label, cv::Point(detection.box.x, detection.box.y - 5),
                     cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0), 1);
+
     }
 }

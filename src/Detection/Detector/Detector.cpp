@@ -14,22 +14,20 @@ Detector::Detector(const DTO::VideoSource& videoSource)
 
 Detector::~Detector() = default;
 
-void Detector::process()
+DTO::FrameData Detector::process()
 {
+    DTO::FrameData frameData = DTO::FrameData();
     cv::Mat frame = video->getNextFrame();
-    if (!frame.empty()) {
-        processedFrame = detect(frame);
-    } else {
-        processedFrame = DTO::FrameData();  //TODO: maybe should change default frame to something different
-    }
-}
 
-DTO::FrameData Detector::detect(const cv::Mat& frame)
-{
-    DTO::FrameData frameData;
-    frameData.frame = frame;
-    frameData.detections = model->detectObjects(frame);
-    video->drawDetectionResults(frameData);
+    if (!frame.empty()) {
+        frameData.frame = frame;
+        frameData.detections = model->detectObjects(frame);
+        video->drawDetectionResults(frameData);
+        processedFrame = frameData;
+    } else {
+        processedFrame = frameData;
+    }
+
     return frameData;
 }
 
